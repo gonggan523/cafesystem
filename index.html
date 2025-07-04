@@ -929,8 +929,12 @@
 
             <!-- 주간 스케줄 -->
             <div class="schedule-view">
-                <div class="schedule-header">
-                    <h3 class="schedule-date" id="weekRange"></h3>
+                <div class="schedule-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <button class="btn-nav" id="prevWeek">◀</button>
+                        <h3 class="schedule-date" id="weekRange"></h3>
+                        <button class="btn-nav" id="nextWeek">▶</button>
+                    </div>
                     <button class="btn btn-primary" style="padding: 8px 16px; font-size: 14px;" onclick="showTab('employees')">스케줄 상세보기</button>
                 </div>
                 <div id="weekSchedule">
@@ -1513,6 +1517,7 @@
 <script>
         // 전역 변수
         let currentScheduleMonth = new Date();
+        let currentWeekStart = new Date();
         let currentCategory = 'all';
         let currentUser = '김대표';
         
@@ -1702,13 +1707,6 @@
         }
 
         function loadDashboard() {
-            const today = new Date();
-            const start = new Date(today);
-            const end = new Date(today);
-            end.setDate(today.getDate() + 6);
-            const rangeStr = `${start.toLocaleDateString('ko-KR')} ~ ${end.toLocaleDateString('ko-KR')}`;
-            const weekRangeEl = document.getElementById('weekRange');
-            if (weekRangeEl) weekRangeEl.textContent = rangeStr;
             loadTodayWorkers();
             loadWeeklySchedule();
             loadPendingRequests();
@@ -1759,25 +1757,44 @@
         function loadWeeklySchedule() {
             const schedule = getData('schedule') || {};
             const employees = getData('employees') || [];
-            const today = new Date();
+            const weekStart = new Date(currentWeekStart);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+
+            const weekRangeEl = document.getElementById('weekRange');
+            if (weekRangeEl) {
+                weekRangeEl.textContent = `${weekStart.toLocaleDateString('ko-KR')} ~ ${weekEnd.toLocaleDateString('ko-KR')}`;
+            }
+
             const shifts = ['오픈', '미들A', '미들B', '마감'];
-            let html = '<table class="schedule-table"><thead><tr><th>날짜</th>';
-            shifts.forEach(s => html += `<th>${s}</th>`);
-            html += '</tr></thead><tbody>';
+            const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
+
+            let html = '<table class="schedule-table"><thead><tr>';
             for (let i = 0; i < 7; i++) {
-                const d = new Date(today);
-                d.setDate(today.getDate() + i);
+                const d = new Date(weekStart);
+                d.setDate(weekStart.getDate() + i);
+                html += `<th>${d.getMonth() + 1}/${d.getDate()}<br>(${dayNames[i]})</th>`;
+            }
+            html += '</tr></thead><tbody><tr>';
+
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(weekStart);
+                d.setDate(weekStart.getDate() + i);
                 const dateStr = d.toISOString().split('T')[0];
                 const daySchedule = schedule[dateStr] || {};
-                html += `<tr><td>${d.getMonth() + 1}/${d.getDate()}</td>`;
+                html += '<td>';
                 shifts.forEach(shift => {
                     const info = daySchedule[shift];
-                    const emp = info ? employees.find(e => e.id === info.employee_id) : null;
-                    html += `<td>${emp ? emp.name : '-'}</td>`;
+                    if (info) {
+                        const emp = employees.find(e => e.id === info.employee_id);
+                        html += `<div class="schedule-entry">${shift}: ${emp ? emp.name : ''}</div>`;
+                    }
                 });
-                html += '</tr>';
+                html += '</td>';
             }
-            html += '</tbody></table>';
+
+            html += '</tr></tbody></table>';
+
             const weekScheduleEl = document.getElementById('weekSchedule');
             if (weekScheduleEl) weekScheduleEl.innerHTML = html;
         }
@@ -2465,6 +2482,10 @@
             if (prevMonth) prevMonth.addEventListener('click', () => { currentScheduleMonth.setMonth(currentScheduleMonth.getMonth() - 1); loadMonthlySchedule(); });
             const nextMonth = document.getElementById('nextMonth');
             if (nextMonth) nextMonth.addEventListener('click', () => { currentScheduleMonth.setMonth(currentScheduleMonth.getMonth() + 1); loadMonthlySchedule(); });
+            const prevWeek = document.getElementById('prevWeek');
+            if (prevWeek) prevWeek.addEventListener('click', () => { currentWeekStart.setDate(currentWeekStart.getDate() - 7); loadWeeklySchedule(); });
+            const nextWeek = document.getElementById('nextWeek');
+            if (nextWeek) nextWeek.addEventListener('click', () => { currentWeekStart.setDate(currentWeekStart.getDate() + 7); loadWeeklySchedule(); });
             const now = new Date();
             const salaryYearEl = document.getElementById('salaryYear');
             const salaryMonthEl = document.getElementById('salaryMonth');
@@ -2596,6 +2617,11 @@
             console.log('시스템 초기화 시작');
             try {
                 initializeData();
+                const now = new Date();
+                const day = now.getDay();
+                currentWeekStart = new Date(now);
+                currentWeekStart.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+
                 document.getElementById('userSelect').value = currentUser;
                 updateUserPermissions();
                 loadDashboard();
