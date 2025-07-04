@@ -1994,45 +1994,7 @@
             const orderListEl = document.getElementById('orderList');
             if (orderListEl) orderListEl.innerHTML = html || '<p style="color: #666;">발주가 필요한 품목이 없습니다.</p>';
         }
-            html += '<th style="padding: 12px; background-color: #f8f8f8;">날짜</th>';
-            html += '<th style="padding: 12px; background-color: #f8f8f8;">구분</th>';
-            html += '<th style="padding: 12px; background-color: #f8f8f8;">품목</th>';
-            html += '<th style="padding: 12px; background-color: #f8f8f8;">수량</th>';
-            html += '<th style="padding: 12px; background-color: #f8f8f8;">비고</th>';
-            html += '<th style="padding: 12px; background-color: #f8f8f8;">담당자</th>';
-            html += '</tr></thead><tbody>';
-            history.slice(0,20).forEach(item => {
-                const typeClass = item.type === '입고' ? 'stock-status good' : 'stock-status warning';
-                html += `\n                    <tr>\n                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">${new Date(item.date).toLocaleDateString('ko-KR')}</td>\n                        <td style="padding: 12px; border-bottom: 1px solid #ddd;"><span class="${typeClass}">${item.type}</span></td>\n                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">${item.item_name}</td>\n                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">${item.quantity}${item.unit}</td>\n                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">${item.note || '-'}</td>\n                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">${item.user}</td>\n                    </tr>`;
-            });
-            html += '</tbody></table>';
-            const inoutHistoryEl = document.getElementById('inoutHistory');
-            if (inoutHistoryEl) inoutHistoryEl.innerHTML = html || '<p style="color: #666;">입출고 내역이 없습니다.</p>';
-        }
 
-        function loadOrderList() {
-            const inventory = getData('inventory') || [];
-            const lowStockItems = inventory.filter(item => item.current_stock <= item.min_stock * 1.5);
-            let html = '<div style="margin-bottom: 20px;">';
-            html += '<h4 style="color: var(--primary-color);">발주 필요 품목</h4>';
-            html += '<table class="inventory-table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
-            html += '<thead><tr>';
-            html += '<th style="padding: 12px; background-color: #f8f8f8;">품목명</th>';
-            html += '<th style="padding: 12px; background-color: #f8f8f8;">카테고리</th>';
-            html += '<th style="padding: 12px; background-color: #f8f8f8;">현재 재고</th>';
-            html += '<th style="padding: 12px; background-color: #f8f8f8;">권장 발주량</th>';
-            html += '<th style="padding: 12px; background-color: #f8f8f8;">상태</th>';
-            html += '</tr></thead><tbody>';
-            lowStockItems.forEach(item => {
-                const recommendedOrder = item.min_stock * 3 - item.current_stock;
-                const urgency = item.current_stock <= item.min_stock ? 'danger' : 'warning';
-                const urgencyText = item.current_stock <= item.min_stock ? '긴급' : '필요';
-                html += `\n                    <tr>\n                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">${item.name}</td>\n                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">${item.category}</td>\n                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">${item.current_stock}${item.unit}</td>\n                        <td style="padding: 12px; border-bottom: 1px solid #ddd;">${recommendedOrder}${item.unit}</td>\n                        <td style="padding: 12px; border-bottom: 1px solid #ddd;"><span class="stock-status ${urgency}">${urgencyText}</span></td>\n                    </tr>`;
-            });
-            html += '</tbody></table></div>';
-            const orderListEl = document.getElementById('orderList');
-            if (orderListEl) orderListEl.innerHTML = html || '<p style="color: #666;">발주가 필요한 품목이 없습니다.</p>';
-        }
         function calculateMonthlySalary() {
             const year = document.getElementById('salaryYear').value;
             const month = document.getElementById('salaryMonth').value;
